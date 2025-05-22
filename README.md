@@ -7,12 +7,10 @@
 ---
 
 # Soal 1
----
 
 
 ---
 # Soal 2
----
 ## Deskripsi Soal
 Diberikan direktori relics/ berisi pecahan file gambar Baymax.jpeg.000 hingga .013. Buatlah filesystem virtual menggunakan FUSE dengan nama Baymax yang:
 1. Membaca file Baymax.jpeg yang telah dipotong-potong menjadi 14 file `.000`, `.001`, ..., `.013`
@@ -274,10 +272,115 @@ void write_log(const char *action, const char *desc) {
 
 ---
 # Soal 3
----
+
 
 
 ---
 # Soal 4
----
+## Deskripsi Soal
+Disini soal meminta untuk membuat sebuah filesystem virtual menggunakan FUSE (Filesystem in Userspace) dengan beberapa folder khusus yang merepresentasikan area dalam game Maimai. Setiap folder memiliki karakteristik dan behavior tersendiri terhadap file di dalamnya, seperti perubahan nama file, isi file, enkripsi, kompresi, hingga akses read-only.
 
+ Struktur utama direktori adalah sebagai berikut
+```bash
+chiho/
+├── starter/
+├── metro/
+├── dragon/
+├── blackrose/
+├── heaven/
+├── youth/
+```
+FUSE mount point: `fuse_dir/`
+
+### a. Starter : Penanganan Ekstensi `.mai`
+File yang ditulis ke direktori `starter` di mount point `fuse_dir/` akan disimpan ke `chiho/starter` dengan ekstensi `.mai.` Namun, ekstensi ini tidak boleh terlihat dari sisi pengguna di `fuse_dir`.
+
+**Implementasi:**
+Pada `full_path`, ditambahkan `.mai` saat write dan read:
+```c
+if (is_starter_path(fuse_path) && transformed) {
+    ...
+    snprintf(temp, sizeof(temp), "%s%s%s.mai", CHIHO_DIR, dir, name);
+    return strdup(temp);
+}
+```
+Dan di `fs_readdir`, nama file dipotong sebelum `.mai`:
+```c
+if (len > 4 && strcmp(de->d_name + len - 4, ".mai") == 0) {
+    strncpy(display_name, de->d_name, len - 4);
+    display_name[len - 4] = '\0';
+    filler(buf, display_name, NULL, 0, 0);
+}
+```
+
+### b. Metro : String Shifting pada Isi File
+Isi file di metro akan di-shift saat ditulis dan di-unshift saat dibaca. Nama file tetap.
+
+**Implementasi:**
+```c
+// Saat write
+else if (is_metro_path(path)) {
+    shift_string(temp, temp);
+    res = pwrite(fd, temp, size, offset);
+}
+
+// Saat read
+else if (is_metro_path(path)) {
+    unshift_string(buf, buf);
+}
+```
+
+### c. Dragon: ROT13 Enkripsi
+Isi file akan di-enkripsi menggunakan ROT13 saat write, dan di-dekripsi saat read.
+
+**Implementasi:**
+```c
+// fs_write
+rot13_buffer(temp, size);
+
+// fs_read
+rot13_buffer(buf, res);
+```
+
+### d. Heaven: Enkripsi AES 256 CBC
+Isi file dienkripsi dengan AES 256 CBC saat disimpan, menggunakan IV acak yang disisipkan di awal file.
+
+**Implementasi:**
+```c
+// fs_write
+RAND_bytes(iv, AES_BLOCK_SIZE);
+cipher_len = encrypt_aes(...);
+memcpy(cipher, iv, AES_BLOCK_SIZE);
+```
+```c
+// fs_read
+memcpy(iv, buf, AES_BLOCK_SIZE);
+decrypted_len = decrypt_aes(...);
+```
+### e. Youth: Kompresi zlib (gzip)
+Isi file dikompresi menggunakan zlib dan disimpan bersama ukuran asli (4 byte di awal).
+
+**Implementasi:**
+```c
+// fs_write
+uint32_t original_size = (uint32_t)size;
+pwrite(fd, &original_size, sizeof(uint32_t), offset);
+pwrite(fd, compressed, compressed_len, offset + sizeof(uint32_t));
+```
+```c
+// fs_read
+memcpy(&original_size, buf, sizeof(uint32_t));
+decompressed_len = decompress_buffer(...);
+```
+
+### f. Prism (7sref): Read-Only Aggregator
+Prism (`/7sref`) adalah direktori baca-saja yang menggabungkan isi dari semua folder lain (`starter`, `metro`, dst) ke dalam satu view. File ditampilkan dalam bentuk hasil dekripsi/dekompresi/asli sesuai lokasi aslinya.
+
+**Implementasi:**
+1. Fungsi `fs_readdir` mengumpulkan nama file unik dari seluruh folder `chiho_*`.
+2. Fungsi `fs_read` meneruskan akses ke path chiho sebenarnya:
+```c
+char *real = find_prism_source_file(path);
+snprintf(fake_path, sizeof(fake_path), "%s", real + strlen(CHIHO_DIR));
+int res = fs_read(fake_path, buf, size, offset, fi);
+```
