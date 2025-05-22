@@ -1,18 +1,16 @@
 version: '3.8'
-
 services:
   antink:
     build: .
-    container_name: antink-server
-    privileged: true
-    command: ./antink /mnt/antink
+    container_name: antink_container
     cap_add:
       - SYS_ADMIN
     security_opt:
       - apparmor:unconfined
+    devices:
+      - /dev/fuse
     volumes:
-      - ./it24_host:/original
-      - ./antink_mount:/mnt/antink
-      - ./antink-logs:/var/log
-    stdin_open: true
+      - ./antink_mount:/mnt/antink_mount
+      - ./it24_host:/mnt/original
+      - ./antink-logs:/mnt/logs
     tty: true
