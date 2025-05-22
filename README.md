@@ -340,18 +340,21 @@ AntiNK adalah proyek berbasis FUSE dalam container Docker yang bertugas:
 
 ## 🧱 Struktur Dockerfile
 Dockerfile
-```FROM ubuntu:20.04```
+```FROM ubuntu:20.04
+```
 
 ▶️ Memakai image Ubuntu 20.04 sebagai basis.
 
 Dockerfile
-```ENV DEBIAN_FRONTEND=noninteractive```
+```ENV DEBIAN_FRONTEND=noninteractive
+```
 
 ▶️ Supaya apt gak nanya-nanya interaktif (biar auto saat build).
 
 Dockerfile
 ```RUN apt-get update && \
-    apt-get install -y fuse gcc make libfuse-dev pkg-config```
+    apt-get install -y fuse gcc make libfuse-dev pkg-config
+```
 
 ▶️ Instal tools penting:
 
@@ -361,7 +364,8 @@ Dockerfile
 - pkg-config: bantu cari flag FUSE saat compile
 
 Dockerfile
-```RUN mkdir /mnt/antink_mount /mnt/original /mnt/logs```
+```RUN mkdir /mnt/antink_mount /mnt/original /mnt/logs
+```
 
 ▶️ Buat 3 direktori mount di dalam container:
 
