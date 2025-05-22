@@ -339,8 +339,8 @@ AntiNK adalah proyek berbasis FUSE dalam container Docker yang bertugas:
 - Mencatat semua aktivitas ke dalam log
 
 ## 🧱 Struktur Dockerfile
-Dockerfile
-```FROM ubuntu:20.04
+```Dockerfile
+FROM ubuntu:20.04
 ```
 
 ▶️ Memakai image Ubuntu 20.04 sebagai basis.
