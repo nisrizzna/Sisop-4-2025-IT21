@@ -345,14 +345,14 @@ FROM ubuntu:20.04
 
 ▶️ Memakai image Ubuntu 20.04 sebagai basis.
 
-Dockerfile
-```ENV DEBIAN_FRONTEND=noninteractive
+```Dockerfile
+ENV DEBIAN_FRONTEND=noninteractive
 ```
 
 ▶️ Supaya apt gak nanya-nanya interaktif (biar auto saat build).
 
-Dockerfile
-```RUN apt-get update && \
+```Dockerfile
+RUN apt-get update && \
     apt-get install -y fuse gcc make libfuse-dev pkg-config
 ```
 
@@ -363,8 +363,8 @@ Dockerfile
 - libfuse-dev: pustaka pengembangan FUSE
 - pkg-config: bantu cari flag FUSE saat compile
 
-Dockerfile
-```RUN mkdir /mnt/antink_mount /mnt/original /mnt/logs
+```Dockerfile
+RUN mkdir /mnt/antink_mount /mnt/original /mnt/logs
 ```
 
 ▶️ Buat 3 direktori mount di dalam container:
@@ -373,31 +373,37 @@ Dockerfile
 - original: tempat file asli
 - logs: tempat log dicatat
 
-Dockerfile
-```COPY antink.c .```
+```Dockerfile
+COPY antink.c .
+```
 
 ▶️ Salin file sumber antink.c ke dalam image.
 
-Dockerfile
-```RUN gcc -D_FILE_OFFSET_BITS=64 -Wall antink.c $(pkg-config fuse --cflags --libs) -o /antink```
+```Dockerfile
+RUN gcc -D_FILE_OFFSET_BITS=64 -Wall antink.c $(pkg-config fuse --cflags --libs) -o /antink
+```
 
 ▶️ Compile antink.c menjadi executable /antink dengan flag untuk dukung file besar.
 
-Dockerfile
-``VOLUME ["/mnt/antink_mount", "/mnt/original", "/mnt/logs"]```
+```Dockerfile
+VOLUME ["/mnt/antink_mount", "/mnt/original", "/mnt/logs"]
+```
 
 ▶️ Tentukan direktori yang akan dimount dari luar ke container.
 
-Dockerfile
-```CMD ["/antink", "/mnt/antink_mount", "-f"]```
+```Dockerfile
+CMD ["/antink", "/mnt/antink_mount", "-f"]
+```
 
 ▶️ Jalankan FUSE dengan mount point /mnt/antink_mount secara foreground (-f).
 
 📦 docker-compose.yml Breakdown
-```services:
+```
+services:
   antink:
     build: .
-    container_name: antink_container```
+    container_name: antink_container
+```
 
 ▶️ Buat container bernama antink_container dari Dockerfile di direktori ini.
 
