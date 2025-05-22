@@ -330,6 +330,221 @@ void write_log(const char *action, const char *desc) {
 
 ---
 # Soal 3
+🐧 AntiNK: Sistem Perlindungan File Nakal ala FUSE + Docker
+AntiNK adalah proyek berbasis FUSE dalam container Docker yang bertugas:
+
+Membalik nama file yang mencurigakan (nafis, kimcun)
+
+Mengenkripsi isi file .txt pakai ROT13
+
+Mencatat semua aktivitas ke dalam log
+💣 Cocok buat jaga-jaga dari file nakal di sistemmu!
+
+🧱 Struktur Dockerfile
+Dockerfile
+Copy
+Edit
+FROM ubuntu:20.04
+▶️ Memakai image Ubuntu 20.04 sebagai basis.
+
+Dockerfile
+Copy
+Edit
+ENV DEBIAN_FRONTEND=noninteractive
+▶️ Supaya apt gak nanya-nanya interaktif (biar auto saat build).
+
+Dockerfile
+Copy
+Edit
+RUN apt-get update && \
+    apt-get install -y fuse gcc make libfuse-dev pkg-config
+▶️ Instal tools penting:
+
+fuse: untuk sistem file user-space
+
+gcc + make: untuk kompilasi C
+
+libfuse-dev: pustaka pengembangan FUSE
+
+pkg-config: bantu cari flag FUSE saat compile
+
+Dockerfile
+Copy
+Edit
+RUN mkdir /mnt/antink_mount /mnt/original /mnt/logs
+▶️ Buat 3 direktori mount di dalam container:
+
+antink_mount: hasil mount sistem file
+
+original: tempat file asli
+
+logs: tempat log dicatat
+
+Dockerfile
+Copy
+Edit
+COPY antink.c .
+▶️ Salin file sumber antink.c ke dalam image.
+
+Dockerfile
+Copy
+Edit
+RUN gcc -D_FILE_OFFSET_BITS=64 -Wall antink.c $(pkg-config fuse --cflags --libs) -o /antink
+▶️ Compile antink.c menjadi executable /antink dengan flag untuk dukung file besar.
+
+Dockerfile
+Copy
+Edit
+VOLUME ["/mnt/antink_mount", "/mnt/original", "/mnt/logs"]
+▶️ Tentukan direktori yang akan dimount dari luar ke container.
+
+Dockerfile
+Copy
+Edit
+CMD ["/antink", "/mnt/antink_mount", "-f"]
+▶️ Jalankan FUSE dengan mount point /mnt/antink_mount secara foreground (-f).
+
+📦 docker-compose.yml Breakdown
+yaml
+Copy
+Edit
+services:
+  antink:
+    build: .
+    container_name: antink_container
+▶️ Buat container bernama antink_container dari Dockerfile di direktori ini.
+
+yaml
+Copy
+Edit
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+    devices:
+      - /dev/fuse
+▶️ Hak istimewa agar FUSE bisa jalan:
+
+SYS_ADMIN: dibutuhkan oleh FUSE
+
+apparmor:unconfined: agar container bisa akses FUSE device
+
+devices: mount /dev/fuse dari host
+
+yaml
+Copy
+Edit
+    volumes:
+      - ./antink_mount:/mnt/antink_mount
+      - ./it24_host:/mnt/original
+      - ./antink-logs:/mnt/logs
+▶️ Hubungkan direktori di host ke dalam container:
+
+it24_host: tempat file asli
+
+antink-logs: untuk log aktivitas
+
+antink_mount: mount hasil sistem FUSE
+
+yaml
+Copy
+Edit
+    tty: true
+▶️ Agar container punya terminal aktif.
+
+🧠 Penjelasan Kode antink.c
+🔍 Fungsi Kecil Tapi Penting
+c
+Copy
+Edit
+void write_log(const char *level, const char *msg)
+▶️ Fungsi nulis log ke file /mnt/logs/log.txt. Format: [LEVEL] YYYY-MM-DD HH:MM:SS Pesan.
+
+c
+Copy
+Edit
+int is_reversed(const char *path)
+▶️ Cek apakah nama file mengandung kata "nafis" atau "kimcun". Return 1 kalau iya.
+
+c
+Copy
+Edit
+void reverse_name(const char *src, char *dest)
+▶️ Balik string dari kanan ke kiri (untuk file "berbahaya").
+
+c
+Copy
+Edit
+void rot13(char *buf, size_t size)
+▶️ Enkripsi isi buffer pakai ROT13 (setengah Caesar cipher, geser 13 huruf).
+
+📁 fullpath()
+c
+Copy
+Edit
+void fullpath(char fpath[1024], const char *path)
+▶️ Buat path absolut ke file di ORIGINAL_DIR.
+
+Kalau namanya mencurigakan, dibalik dulu.
+
+Misal: /hello/nafis.txt → cari file /mnt/original/tsixfisan
+
+📂 xmp_getattr()
+c
+Copy
+Edit
+static int xmp_getattr(const char *path, struct stat *stbuf)
+▶️ Panggilan stat() buat ambil metadata file (ukuran, tipe, dll).
+FUSE butuh ini buat validasi semua operasi.
+
+📜 xmp_readdir()
+c
+Copy
+Edit
+static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler, ...)
+▶️ Tampilkan isi direktori:
+
+Kalau file mengandung "nafis" atau "kimcun", tampilkan versi dibalik
+
+Misal: di direktori asli ada nafis.txt → ditampilkan sebagai txt.sifan
+
+📖 xmp_open()
+c
+Copy
+Edit
+static int xmp_open(const char *path, struct fuse_file_info *fi)
+▶️ Coba buka file dengan flag tertentu. Return error kalau gagal.
+
+📘 xmp_read()
+c
+Copy
+Edit
+static int xmp_read(const char *path, char *buf, size_t size, off_t offset, ...)
+▶️ Baca isi file:
+
+Kalau file .txt dan tidak mencurigakan, isinya dienkripsi pakai ROT13
+
+Setelah dibaca, log ditulis: READ: /namafile
+
+🚀 main()
+c
+Copy
+Edit
+int main(int argc, char *argv[])
+▶️ Jalankan FUSE dan tulis log saat server aktif.
+
+🧪 Contoh Output
+csharp
+Copy
+Edit
+[INFO] 2025-05-22 19:30:45 Antink server berjalan...
+[INFO] 2025-05-22 19:31:01 READ: /halo.txt
+[INFO] 2025-05-22 19:31:18 READ: /sifank.txt
+💡 Catatan Tambahan
+Semua proses transparan bagi user: buka file seolah biasa, tapi sistem di baliknya bisa modifikasi nama dan isi.
+
+Cocok buat latihan sistem operasi, FUSE, dan keamanan dasar file system.
+
 
 
 
