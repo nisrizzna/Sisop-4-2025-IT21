@@ -330,7 +330,7 @@ void write_log(const char *action, const char *desc) {
 
 ---
 # Soal 3
-##🐧 AntiNK: Sistem Perlindungan File dari Nafis & Kimcun menggunakan FUSE + Docker
+## 🐧 AntiNK: Sistem Perlindungan File dari Nafis & Kimcun menggunakan FUSE + Docker
 
 AntiNK adalah proyek berbasis FUSE dalam container Docker yang bertugas:
 
@@ -397,7 +397,7 @@ CMD ["/antink", "/mnt/antink_mount", "-f"]
 
 ▶️ Jalankan FUSE dengan mount point /mnt/antink_mount secara foreground (-f).
 
-📦 docker-compose.yml Breakdown
+## 📦 docker-compose.yml Breakdown
 ```
 services:
   antink:
