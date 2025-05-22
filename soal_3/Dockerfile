@@ -1,14 +1,20 @@
-FROM ubuntu:latest
+FROM ubuntu:20.04
 
-RUN apt update && apt install -y \
-    gcc \
-    pkg-config \
-    libfuse-dev
+ENV DEBIAN_FRONTEND=noninteractive
 
-WORKDIR /app
+RUN apt-get update && \
+    apt-get install -y fuse gcc make libfuse-dev pkg-config
 
+# Buat direktori mount point di dalam container
+RUN mkdir /mnt/antink_mount /mnt/original /mnt/logs
+
+# Salin source code
 COPY antink.c .
 
-RUN gcc antink.c -o antink -DFUSE_USE_VERSION=26 -D_FILE_OFFSET_BITS=64 `pkg-config fuse --cflags --libs`
+# Compile antink.c dengan FUSE
+RUN gcc -D_FILE_OFFSET_BITS=64 -Wall antink.c $(pkg-config fuse --cflags --libs) -o /antink
 
-CMD ["./antink"]
+# Volume mount
+VOLUME ["/mnt/antink_mount", "/mnt/original", "/mnt/logs"]
+
+CMD ["/antink", "/mnt/antink_mount", "-f"]
