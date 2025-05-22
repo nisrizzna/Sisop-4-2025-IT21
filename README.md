@@ -8,6 +8,64 @@
 
 # Soal 1
 
+## Deskripsi Soal
+Pada praktikum ini, diminta untuk membuat sebuah program C yang dapat membaca file teks berisi data hexadecimal di dalam folder anomali, lalu mengubah data tersebut menjadi file gambar berekstensi .png yang disimpan di dalam folder anomali/image. Selain itu, setiap proses konversi harus dicatat ke dalam file log bernama conversion.log yang juga berada di dalam folder anomali.
+
+## Deskripsi Program
+Program ini melakukan proses sebagai berikut:
+
+1. Membuat folder output jika belum ada.
+2. Membuka folder input anomali, lalu membaca semua file .txt di dalamnya.
+3. Setiap file .txt berisi representasi data gambar dalam format hexadecimal.
+4. Setiap dua karakter hexadecimal dibaca dan diubah menjadi byte menggunakan fungsi hex_to_byte.
+5. Data hasil konversi ditulis ke file gambar .png di folder image.
+6. Setiap proses konversi dicatat ke dalam file log conversion.log dengan timestamp.
+7. Setelah selesai, program menutup semua file dan folder yang digunakan.
+
+## Penjelasan Fungsi dan Prosedur
+
+1. ```unsigned char hex_to_byte(const char *hex)```
+Mengonversi 2 karakter hexadecimal menjadi 1 byte data.
+
+2. ```void get_timestamp(char *date_str, char *time_str)```
+Mengambil waktu lokal saat ini dan menyimpannya dalam format string tanggal dan waktu.
+
+3. Fungsi utama ```main()```
+Melakukan seluruh proses mulai dari pengecekan folder, pembacaan file, konversi, pembuatan file hasil, dan pencatatan log.
+
+## Kelebihan Program
+
+Program konversi file hexadecimal ke file gambar PNG ini memiliki beberapa kelebihan yang dapat menunjang kemudahan dan keamanan dalam proses pengolahan data. Berikut beberapa kelebihannya:
+
+1. Proses Otomatis dan Massal
+Program dapat memproses banyak file sekaligus dalam satu kali eksekusi tanpa perlu menambahkan nama file secara manual, sehingga sangat efisien untuk jumlah file yang besar.
+2. Pembuatan Folder Output Otomatis
+Program secara otomatis membuat folder output (```anomali/image```) apabila belum tersedia, sehingga tidak perlu melakukan pembuatan folder manual terlebih dahulu.
+3. Pembuatan File Log Terstruktur
+Setiap proses konversi dicatat secara rapi ke dalam file ```conversion.log``` beserta waktu dan nama file yang diproses, sehingga dapat memudahkan proses tracking data.
+4. Penerapan Timestamp Real-Time
+Setiap file hasil konversi diberi timestamp berupa tanggal dan waktu saat file diproses. Hal ini sangat berguna untuk membedakan file hasil konversi yang dilakukan di waktu berbeda.
+5. Manajemen Memori yang Baik
+Program menggunakan alokasi memori dinamis sesuai kebutuhan dan melakukan dealokasi setelah penggunaan untuk menghindari kebocoran memori (memory leak).
+
+## Revisi Soal
+
+Pada implementasi awal program, terdapat kendala di mana program tidak dapat membaca semua file yang terdapat dalam folder ```anomali``` Setelah ditelusuri, penyebabnya adalah karena program hanya memproses file yang memiliki ekstensi ```.txt```. Hal ini dikarenakan adanya kondisi berikut pada bagian loop pembacaan direktori:
+
+```if (strstr(entry->d_name, ".txt") == NULL) continue;```
+Kondisi ini menyebabkan file yang tidak memiliki ekstensi .txt akan dilewati dan tidak diproses.
+
+Untuk mengatasi permasalahan tersebut, dilakukan revisi pada bagian pengecekan nama file. Supaya program dapat membaca semua file dalam folder anomali tanpa peduli ekstensi, maka kondisi tersebut dihapus atau dimodifikasi sesuai kebutuhan
+
+### Menghapus pengecekan ekstensi
+Jika memang semua file di folder anomali ingin diproses:
+
+```
+// while ((entry = readdir(dir)) != NULL) {
+//     if (strstr(entry->d_name, ".txt") == NULL) continue;
+while ((entry = readdir(dir)) != NULL) {
+```
+
 
 ---
 # Soal 2
