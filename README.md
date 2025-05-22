@@ -386,7 +386,7 @@ int res = fs_read(fake_path, buf, size, offset, fi);
 ```
 
 ## Testing :
-```c
+```bash
 # Starter
 echo "halo starter" > fuse_dir/starter/test.txt
 cat chiho/starter/test.mai     # hasil tersimpan
