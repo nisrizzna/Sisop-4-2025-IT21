@@ -407,12 +407,14 @@ services:
 
 ▶️ Buat container bernama antink_container dari Dockerfile di direktori ini.
 
-```    cap_add:
+```
+    cap_add:
       - SYS_ADMIN
     security_opt:
       - apparmor:unconfined
     devices:
-      - /dev/fuse```
+      - /dev/fuse
+```
 
 ▶️ Hak istimewa agar FUSE bisa jalan:
 
@@ -420,10 +422,12 @@ services:
 - apparmor:unconfined: agar container bisa akses FUSE device
 - devices: mount /dev/fuse dari host
 
-```    volumes:
+```
+    volumes:
       - ./antink_mount:/mnt/antink_mount
       - ./it24_host:/mnt/original
-      - ./antink-logs:/mnt/logs```
+      - ./antink-logs:/mnt/logs
+```
 
 ▶️ Hubungkan direktori di host ke dalam container:
 
@@ -431,31 +435,43 @@ services:
 - antink-logs: untuk log aktivitas
 - antink_mount: mount hasil sistem FUSE
 
-```    tty: true```
+```
+tty: true
+```
 
 ▶️ Agar container punya terminal aktif.
 
 ## 🧠 Penjelasan Kode antink.c
 
 🔍 Fungsi Kecil Tapi Penting
-```void write_log(const char *level, const char *msg)```
+```
+void write_log(const char *level, const char *msg)
+```
 
 ▶️ Fungsi nulis log ke file /mnt/logs/log.txt. Format: [LEVEL] YYYY-MM-DD HH:MM:SS Pesan.
 
-```int is_reversed(const char *path)```
+```
+int is_reversed(const char *path)
+```
 
 ▶️ Cek apakah nama file mengandung kata "nafis" atau "kimcun". Return 1 kalau iya.
 
-```void reverse_name(const char *src, char *dest)```
+```
+void reverse_name(const char *src, char *dest)
+```
 
 ▶️ Balik string dari kanan ke kiri (untuk file "berbahaya").
-```void rot13(char *buf, size_t size)```
+```
+void rot13(char *buf, size_t size)
+```
 
 ▶️ Enkripsi isi buffer pakai ROT13 (setengah Caesar cipher, geser 13 huruf).
 
 ## 📁 fullpath()
 
-```void fullpath(char fpath[1024], const char *path)```
+```
+void fullpath(char fpath[1024], const char *path)
+```
 
 ▶️ Buat path absolut ke file di ORIGINAL_DIR.
 
@@ -464,7 +480,9 @@ Misal: /hello/nafis.txt → cari file /mnt/original/tsixfisan
 
 ## 📂 xmp_getattr()
 
-```static int xmp_getattr(const char *path, struct stat *stbuf)```
+```
+static int xmp_getattr(const char *path, struct stat *stbuf)
+```
 
 ▶️ Panggilan stat() buat ambil metadata file (ukuran, tipe, dll).
 
@@ -472,7 +490,9 @@ FUSE butuh ini buat validasi semua operasi.
 
 ## 📜 xmp_readdir()
 
-```static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler, ...)```
+```
+static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler, ...)
+```
 
 ▶️ Tampilkan isi direktori:
 
@@ -481,13 +501,17 @@ Misal: di direktori asli ada nafis.txt → ditampilkan sebagai txt.sifan
 
 ## 📖 xmp_open()
 
-```static int xmp_open(const char *path, struct fuse_file_info *fi)```
+```
+static int xmp_open(const char *path, struct fuse_file_info *fi)
+```
 
 ▶️ Coba buka file dengan flag tertentu. Return error kalau gagal.
 
 ## 📘 xmp_read()
 
-```static int xmp_read(const char *path, char *buf, size_t size, off_t offset, ...)```
+```
+static int xmp_read(const char *path, char *buf, size_t size, off_t offset, ...)
+```
 
 ▶️ Baca isi file:
 
@@ -496,15 +520,19 @@ Setelah dibaca, log ditulis: READ: /namafile
 
 ## 🚀 main()
 
-```int main(int argc, char *argv[])```
+```
+int main(int argc, char *argv[])
+```
 
 ▶️ Jalankan FUSE dan tulis log saat server aktif.
 
 ## 🧪 Contoh Output
 
-```[INFO] 2025-05-22 19:30:45 Antink server berjalan...
+```
+[INFO] 2025-05-22 19:30:45 Antink server berjalan...
 [INFO] 2025-05-22 19:31:01 READ: /halo.txt
-[INFO] 2025-05-22 19:31:18 READ: /sifank.txt```
+[INFO] 2025-05-22 19:31:18 READ: /sifank.txt
+```
 
 ---
 # Soal 4
