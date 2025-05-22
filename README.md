@@ -384,3 +384,31 @@ char *real = find_prism_source_file(path);
 snprintf(fake_path, sizeof(fake_path), "%s", real + strlen(CHIHO_DIR));
 int res = fs_read(fake_path, buf, size, offset, fi);
 ```
+
+## Testing :
+```c
+# Starter
+echo "halo starter" > fuse_dir/starter/test.txt
+cat chiho/starter/test.mai     # hasil tersimpan
+cat fuse_dir/starter/test.txt  # terlihat normal
+
+# Metro
+echo "hello metro" > fuse_dir/metro/test.txt
+cat chiho/metro/test.txt       # isi dalam bentuk shifted
+cat fuse_dir/metro/test.txt    # terlihat normal
+
+# Dragon
+echo "abc xyz" > fuse_dir/dragon/test.txt
+cat fuse_dir/dragon/test.txt   # otomatis ROT13: nop klm
+
+# Heaven
+echo "secret heaven" > fuse_dir/heaven/test.txt
+cat fuse_dir/heaven/test.txt   # otomatis terdekripsi
+
+# Youth
+echo "compress this" > fuse_dir/youth/test.txt
+cat fuse_dir/youth/test.txt    # otomatis didekompres
+
+# Prism
+cat fuse_dir/7sref/test.txt    # akan tampil dari salah satu area chiho
+```
